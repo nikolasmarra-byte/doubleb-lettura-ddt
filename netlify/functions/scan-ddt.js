@@ -1,3 +1,4 @@
+
 const ANTHROPIC_API_KEY = process.env.ANTHROPIC_API_KEY;
 const MODEL = process.env.ANTHROPIC_MODEL || "claude-haiku-4-5-20251001";
 const ANTHROPIC_VERSION = "2023-06-01";
@@ -49,11 +50,20 @@ exports.handler = async (event) => {
     '{"ddt": string|null, "data": "YYYY-MM-DD"|null, "fornitore": string|null, ' +
     '"righe": [{"descrizione": string, "id": string|null, "lotto": string|null, "scadenza": "YYYY-MM-DD"|null, "quantita": number|null}]}\n' +
     "Regole: \"ddt\" è il numero del documento di trasporto o fattura, se presente. \"data\" è la data del documento. " +
-    "\"fornitore\" è la ragione sociale del fornitore che ha emesso il documento (chi consegna la merce), non il destinatario. " +
+    "\"fornitore\" è la ragione sociale dell'azienda che ha EMESSO il documento: quella riportata nell'intestazione/mittente del documento stesso, " +
+    "di solito insieme a partita IVA, codice fiscale o indirizzo della sede, in alto nel documento o vicino alla firma/timbro. " +
+    "NON è il destinatario (chi riceve, es. DoubleB) e NON è un marchio di prodotto citato nella descrizione degli articoli: un documento può " +
+    "elencare merce di marchi noti (es. \"AIA\", \"Fileni\", ecc.) anche se chi lo ha emesso e lo consegna è un distributore/grossista diverso " +
+    "(es. \"BP Food Srl\") — in quel caso \"fornitore\" è il distributore/grossista intestatario del documento, MAI il marchio del prodotto. " +
+    "Se non riesci a individuare con certezza l'intestatario del documento, lascia \"fornitore\" a null piuttosto che indovinare usando un marchio di prodotto. " +
     "Per ogni riga: \"lotto\" è il numero di lotto del fornitore per quel prodotto, se stampato sul documento o sull'etichetta. " +
     "\"scadenza\" è la data di scadenza/TMC se presente, altrimenti null (molti prodotti come la carne fresca non la riportano: va bene null). " +
     "\"quantita\" è la quantità numerica ricevuta di quella riga (kg, litri, pezzi...), senza unità di misura nel valore. " +
-    "Ignora spese di trasporto, note, totali e righe che non sono merce fisica.";
+    "Ignora spese di trasporto, note, totali e righe che non sono merce fisica. " +
+    "Attenzione a non confondere il numero del documento con un lotto: se un codice è chiaramente etichettato come \"lotto\"/\"lot\" " +
+    "(anche vicino all'intestazione o al nome del prodotto), quel codice va SOLO nel campo \"lotto\" della riga corrispondente, mai in \"ddt\". " +
+    "Se non trovi un numero di documento chiaramente etichettato come tale (es. \"DDT n.\", \"Fattura n.\", \"Bolla n.\"), lascia \"ddt\" a null " +
+    "invece di usare un codice lotto o un altro riferimento ambiguo.";
 
   const documentBlock = isPdf
     ? { type: "document", source: { type: "base64", media_type: "application/pdf", data: imageBase64 } }
