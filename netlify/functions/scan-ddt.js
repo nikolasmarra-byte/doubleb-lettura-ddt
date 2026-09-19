@@ -63,12 +63,9 @@ exports.handler = async (event) => {
     "caso di corrispondenza esatta: " +
     JSON.stringify(listaArticoli) + "\n" +
     "Rispondi SOLO con un oggetto JSON valido, senza testo prima o dopo, con questa forma esatta:\n" +
-    '{"tipo": "ddt"|"nota"|"altro", "ddt": string|null, "data": "YYYY-MM-DD"|null, "fornitore": string|null, ' +
-    '"righe": [{"descrizione": string, "id": string|null, "lotto": string|null, "scadenza": "YYYY-MM-DD"|null, "quantita": number|null, "colli": number|null, ' +
-    '"nato": string|null, "allevato": string|null, "macellato": string|null, "sezionato": string|null}]}\n' +
-    "La foto può essere ruotata o storta: leggila comunque orientandola mentalmente nel verso giusto. " +
-    "Regole: \"tipo\" è \"ddt\" per un documento di trasporto o fattura, \"nota\" per una nota di tracciabilità della carne (vedi sotto), \"altro\" negli altri casi. " +
-    "\"ddt\" è il numero del documento di trasporto o fattura, se presente. \"data\" è la data del documento. " +
+    '{"ddt": string|null, "data": "YYYY-MM-DD"|null, "fornitore": string|null, ' +
+    '"righe": [{"descrizione": string, "id": string|null, "lotto": string|null, "scadenza": "YYYY-MM-DD"|null, "quantita": number|null}]}\n' +
+    "Regole: \"ddt\" è il numero del documento di trasporto o fattura, se presente. \"data\" è la data del documento. " +
     "\"fornitore\" è la ragione sociale dell'azienda che ha EMESSO il documento: quella riportata nell'intestazione/mittente del documento stesso, " +
     "di solito insieme a partita IVA, codice fiscale o indirizzo della sede, in alto nel documento o vicino alla firma/timbro. " +
     "NON è il destinatario (chi riceve, es. DoubleB) e NON è un marchio di prodotto citato nella descrizione degli articoli: un documento può " +
@@ -76,12 +73,6 @@ exports.handler = async (event) => {
     "(es. \"BP Food Srl\") — in quel caso \"fornitore\" è il distributore/grossista intestatario del documento, MAI il marchio del prodotto. " +
     "Se non riesci a individuare con certezza l'intestatario del documento, lascia \"fornitore\" a null piuttosto che indovinare usando un marchio di prodotto. " +
     "Per ogni riga: \"lotto\" è il numero di lotto del fornitore per quel prodotto, se stampato sul documento o sull'etichetta. " +
-    "Se una riga riporta PIÙ lotti (es. \"Lotti: 319378 319381 319382\"), mettili TUTTI in \"lotto\", separati da uno spazio, nell'ordine in cui compaiono. " +
-    "\"colli\" è il numero di colli/pezzi/confezioni della riga (la colonna \"Colli\", \"Pz\", \"N. pezzi\" o simile), se presente; altrimenti null. " +
-    "Se il documento è una NOTA DI TRACCIABILITÀ della carne (una tabella con colonne tipo Lotto, Articolo, Peso netto, Nato in, Allevato in, " +
-    "Macellato in, Sezionato in): fai UNA riga per ogni lotto della tabella, con \"lotto\" il suo numero, \"quantita\" il suo peso netto, e in " +
-    "\"nato\", \"allevato\", \"macellato\", \"sezionato\" il testo esatto di quelle colonne (paese e, se c'è, il bollo CE, es. \"Polonia PL14200205WE\"). " +
-    "In un DDT normale lascia quei quattro campi a null. Nella nota, \"fornitore\" è l'azienda che l'ha emessa (spesso nell'intestazione, la stessa del DDT) e \"ddt\" il numero del DDT a cui la nota si riferisce, se scritto. " +
     "\"scadenza\" è la data di scadenza/TMC se presente, altrimenti null (molti prodotti come la carne fresca non la riportano: va bene null). " +
     "\"quantita\" è la quantità numerica ricevuta di quella riga (kg, litri, pezzi...), senza unità di misura nel valore. " +
     "Ignora spese di trasporto, note, totali e righe che non sono merce fisica. " +
