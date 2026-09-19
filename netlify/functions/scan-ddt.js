@@ -1,3 +1,16 @@
+// netlify/functions/scan-ddt.js
+//
+// Legge (OCR "intelligente") una foto di DDT/fattura/etichetta fornitore usando
+// l'API Anthropic direttamente dal server, con una chiave posseduta da DoubleB
+// (variabile d'ambiente ANTHROPIC_API_KEY su Netlify). In questo modo la lettura
+// funziona sempre, per qualunque dipendente, indipendentemente dai permessi del
+// singolo account Claude di chi ha creato l'app: prima girava dentro un Artifact
+// Claude e dipendeva da un permesso ("lettura immagini") che non è garantito per
+// tutti gli account — da qui lo spostamento su questo endpoint proprio.
+//
+// Nessuna dipendenza esterna: usa fetch (disponibile nel runtime Node 18+ di
+// Netlify Functions) per chiamare direttamente https://api.anthropic.com/v1/messages,
+// così non serve "npm install" prima di deployare.
 
 const ANTHROPIC_API_KEY = process.env.ANTHROPIC_API_KEY;
 const MODEL = process.env.ANTHROPIC_MODEL || "claude-haiku-4-5-20251001";
@@ -44,12 +57,21 @@ exports.handler = async (event) => {
   const promptText =
     "Questa è la foto (o scansione) di un documento di trasporto (DDT), fattura o etichetta di un fornitore " +
     "alimentare ricevuta da un burger bar/factory. Estrai ogni riga di merce effettivamente ricevuta.\n" +
-    "Articoli già in anagrafica (usa l'id se una riga corrisponde chiaramente, altrimenti lascia null e riporta la descrizione così com'è): " +
+    "Articoli già in anagrafica (usa l'id se una riga corrisponde chiaramente, altrimenti lascia null e riporta la descrizione così com'è). " +
+    "Un fornitore può scrivere lo stesso articolo con parole leggermente diverse da quelle in anagrafica (ordine delle parole, abbreviazioni, " +
+    "un dettaglio in più o in meno): usa buon senso e abbina comunque l'id quando si tratta chiaramente dello stesso prodotto, non solo in " +
+    "caso di corrispondenza esatta: " +
     JSON.stringify(listaArticoli) + "\n" +
     "Rispondi SOLO con un oggetto JSON valido, senza testo prima o dopo, con questa forma esatta:\n" +
-    '{"ddt": string|null, "data": "YYYY-MM-DD"|null, "fornitore": string|null, ' +
-    '"righe": [{"descrizione": string, "id": string|null, "lotto": string|null, "scadenza": "YYYY-MM-DD"|null, "quantita": number|null}]}\n' +
-    "Regole: \"ddt\" è il numero del documento di trasporto o fattura, se presente. \"data\" è la data del documento. " +
+    '{"rotazione": 0|90|180|270, "tipo": "ddt"|"nota"|"altro", "ddt": string|null, "data": "YYYY-MM-DD"|null, "fornitore": string|null, ' +
+    '"righe": [{"descrizione": string, "id": string|null, "lotto": string|null, "scadenza": "YYYY-MM-DD"|null, "quantita": number|null, "colli": number|null, ' +
+    '"nato": string|null, "allevato": string|null, "macellato": string|null, "sezionato": string|null}]}\n' +
+    "La foto può essere ruotata di 90 o 180 gradi, storta o poco illuminata: leggila comunque orientandola mentalmente nel verso giusto, " +
+    "senza inventare parole che non riesci a leggere (meglio null di un nome sbagliato). " +
+    "\"rotazione\" dice di quanti gradi IN SENSO ORARIO bisogna girare la foto perché il testo si legga dritto: 0 se è già dritta, " +
+    "90 se il testo corre dal basso verso l'alto, 270 se dall'alto verso il basso, 180 se è capovolto. Questo campo è importante: valutalo per primo. " +
+    "Regole: \"tipo\" è \"ddt\" per un documento di trasporto o fattura, \"nota\" per una nota di tracciabilità della carne (vedi sotto), \"altro\" negli altri casi. " +
+    "\"ddt\" è il numero del documento di trasporto o fattura, se presente. \"data\" è la data del documento. " +
     "\"fornitore\" è la ragione sociale dell'azienda che ha EMESSO il documento: quella riportata nell'intestazione/mittente del documento stesso, " +
     "di solito insieme a partita IVA, codice fiscale o indirizzo della sede, in alto nel documento o vicino alla firma/timbro. " +
     "NON è il destinatario (chi riceve, es. DoubleB) e NON è un marchio di prodotto citato nella descrizione degli articoli: un documento può " +
@@ -57,6 +79,12 @@ exports.handler = async (event) => {
     "(es. \"BP Food Srl\") — in quel caso \"fornitore\" è il distributore/grossista intestatario del documento, MAI il marchio del prodotto. " +
     "Se non riesci a individuare con certezza l'intestatario del documento, lascia \"fornitore\" a null piuttosto che indovinare usando un marchio di prodotto. " +
     "Per ogni riga: \"lotto\" è il numero di lotto del fornitore per quel prodotto, se stampato sul documento o sull'etichetta. " +
+    "Se una riga riporta PIÙ lotti (es. \"Lotti: 319378 319381 319382\"), mettili TUTTI in \"lotto\", separati da uno spazio, nell'ordine in cui compaiono. " +
+    "\"colli\" è il numero di colli/pezzi/confezioni della riga (la colonna \"Colli\", \"Pz\", \"N. pezzi\" o simile), se presente; altrimenti null. " +
+    "Se il documento è una NOTA DI TRACCIABILITÀ della carne (una tabella con colonne tipo Lotto, Articolo, Peso netto, Nato in, Allevato in, " +
+    "Macellato in, Sezionato in): fai UNA riga per ogni lotto della tabella, con \"lotto\" il suo numero, \"quantita\" il suo peso netto, e in " +
+    "\"nato\", \"allevato\", \"macellato\", \"sezionato\" il testo esatto di quelle colonne (paese e, se c'è, il bollo CE, es. \"Polonia PL14200205WE\"). " +
+    "In un DDT normale lascia quei quattro campi a null. Nella nota, \"fornitore\" è l'azienda che l'ha emessa (spesso nell'intestazione, la stessa del DDT) e \"ddt\" il numero del DDT a cui la nota si riferisce, se scritto. " +
     "\"scadenza\" è la data di scadenza/TMC se presente, altrimenti null (molti prodotti come la carne fresca non la riportano: va bene null). " +
     "\"quantita\" è la quantità numerica ricevuta di quella riga (kg, litri, pezzi...), senza unità di misura nel valore. " +
     "Ignora spese di trasporto, note, totali e righe che non sono merce fisica. " +
@@ -123,6 +151,8 @@ exports.handler = async (event) => {
   }
 };
 
+// Il modello a volte avvolge il JSON in ```json ... ``` nonostante le istruzioni:
+// questa funzione estrae il primo blocco { ... } valido dal testo di risposta.
 function extractJson(text) {
   const fenced = text.match(/```(?:json)?\s*([\s\S]*?)```/i);
   if (fenced) return fenced[1].trim();
