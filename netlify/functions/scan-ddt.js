@@ -63,13 +63,10 @@ exports.handler = async (event) => {
     "caso di corrispondenza esatta: " +
     JSON.stringify(listaArticoli) + "\n" +
     "Rispondi SOLO con un oggetto JSON valido, senza testo prima o dopo, con questa forma esatta:\n" +
-    '{"rotazione": 0|90|180|270, "tipo": "ddt"|"nota"|"altro", "ddt": string|null, "data": "YYYY-MM-DD"|null, "fornitore": string|null, ' +
+    '{"tipo": "ddt"|"nota"|"altro", "ddt": string|null, "data": "YYYY-MM-DD"|null, "fornitore": string|null, ' +
     '"righe": [{"descrizione": string, "id": string|null, "lotto": string|null, "scadenza": "YYYY-MM-DD"|null, "quantita": number|null, "colli": number|null, ' +
     '"nato": string|null, "allevato": string|null, "macellato": string|null, "sezionato": string|null}]}\n' +
-    "La foto può essere ruotata di 90 o 180 gradi, storta o poco illuminata: leggila comunque orientandola mentalmente nel verso giusto, " +
-    "senza inventare parole che non riesci a leggere (meglio null di un nome sbagliato). " +
-    "\"rotazione\" dice di quanti gradi IN SENSO ORARIO bisogna girare la foto perché il testo si legga dritto: 0 se è già dritta, " +
-    "90 se il testo corre dal basso verso l'alto, 270 se dall'alto verso il basso, 180 se è capovolto. Questo campo è importante: valutalo per primo. " +
+    "La foto può essere ruotata o storta: leggila comunque orientandola mentalmente nel verso giusto. " +
     "Regole: \"tipo\" è \"ddt\" per un documento di trasporto o fattura, \"nota\" per una nota di tracciabilità della carne (vedi sotto), \"altro\" negli altri casi. " +
     "\"ddt\" è il numero del documento di trasporto o fattura, se presente. \"data\" è la data del documento. " +
     "\"fornitore\" è la ragione sociale dell'azienda che ha EMESSO il documento: quella riportata nell'intestazione/mittente del documento stesso, " +
