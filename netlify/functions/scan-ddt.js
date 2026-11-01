@@ -82,19 +82,22 @@ exports.handler = async (event) => {
     "(anche vicino all'intestazione o al nome del prodotto), quel codice va SOLO nel campo \"lotto\" della riga corrispondente, mai in \"ddt\". " +
     "Se non trovi un numero di documento chiaramente etichettato come tale (es. \"DDT n.\", \"Fattura n.\", \"Bolla n.\"), lascia \"ddt\" a null " +
     "invece di usare un codice lotto o un altro riferimento ambiguo. " +
+    "\"descrizione\" va copiata ESATTAMENTE come stampata sul documento, lettera per lettera, abbreviazioni e codici compresi " +
+    "(es. \"Bovino Scottona ANT. 5/C. Fres.\"): non correggere, non interpretare, non tradurre. " +
+    "L'abbinamento all'\"id\" dell'anagrafica si fa SOLO in base alla descrizione dell'articolo, MAI in base al Paese di origine o ad altri dati " +
+    "di tracciabilità: un articolo polacco non è per questo l'articolo dell'anagrafica che ha \"Polonia\" nel nome. " +
+    "\"colli\" è il numero di colli/pezzi della riga se indicato, altrimenti null.\n" +
     // Nicola, 01/11: "l'origine della carne se la può prendere quando scatto la foto?" — la
     // nota di tracciabilità del bovino (Reg. CE 1760/2000) elenca per ogni riga Paese di
-    // nascita, allevamento, macellazione (con bollo CE) e sezionamento: vanno letti qui.
-    "\"colli\" è il numero di colli/pezzi della riga se indicato, altrimenti null. " +
-    "Se il documento è (o contiene) una NOTA INFORMATIVA / DATI DI TRACCIABILITÀ della carne, per ogni riga riporta anche: " +
-    "\"nato\" = Paese di nascita dell'animale, \"allevato\" = Paese di allevamento, \"macellato\" = Paese di macellazione seguito dal numero di bollo CE " +
-    "del macello se stampato (es. \"Polonia PL14200205WE\"), \"sezionato\" = Paese di sezionamento con il bollo CE del laboratorio se stampato. " +
-    "Scrivi i Paesi per esteso in italiano (Italia, Polonia, Germania, Francia, Irlanda, Paesi Bassi, Spagna, Stati Uniti, Brasile, Argentina, Uruguay...); " +
-    "se il documento usa sigle (IT, PL, DE, FR, IE, NL, ES, US, BR, AR, UY) traducile nel nome del Paese. " +
-    "Se la nota riporta la categoria dell'animale (es. scottona, vitellone, vacca) o il lotto/riferimento, usali per riconoscere a quale articolo appartiene la riga. " +
-    "\"tipoOrigine\" è la colonna \"Tipo origine\" della nota (es. \"UE\" oppure \"Extra UE\"), \"auricolare\" è il codice identificativo dell'animale " +
-    "(colonna \"Auricolare\"/\"Marca auricolare\", es. \"PL005572173107\"); se una riga della nota raggruppa più animali, riporta i codici separati da virgola. " +
-    "Se il documento non riporta questi dati, lascia i campi a null.";
+    // nascita, allevamento, macellazione (con bollo CE) e sezionamento. Istruzioni tenute in
+    // fondo e separate: messe in mezzo confondevano la lettura della descrizione (01/11 sera).
+    "DATI DI TRACCIABILITÀ (solo se il documento li riporta, altrimenti tutti null): " +
+    "\"nato\" = Paese di nascita dell'animale; \"allevato\" = Paese di allevamento; \"macellato\" = Paese di macellazione seguito dal bollo CE " +
+    "del macello se stampato (es. \"Polonia PL14200205WE\"); \"sezionato\" = Paese di sezionamento con il bollo CE del laboratorio se stampato; " +
+    "\"tipoOrigine\" = la colonna \"Tipo origine\" (es. \"UE\", \"Extra UE\"); \"auricolare\" = il codice identificativo dell'animale " +
+    "(colonna \"Auricolare\"), più codici separati da virgola. " +
+    "Paesi per esteso in italiano (Italia, Polonia, Germania, Francia, Irlanda, Paesi Bassi, Spagna, Stati Uniti, Brasile, Argentina, Uruguay); " +
+    "le sigle (IT, PL, DE, FR, IE, NL, ES, US, BR, AR, UY) vanno tradotte nel nome del Paese.";
 
   const documentBlock = isPdf
     ? { type: "document", source: { type: "base64", media_type: "application/pdf", data: imageBase64 } }
