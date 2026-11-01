@@ -65,7 +65,8 @@ exports.handler = async (event) => {
     "Rispondi SOLO con un oggetto JSON valido, senza testo prima o dopo, con questa forma esatta:\n" +
     '{"ddt": string|null, "data": "YYYY-MM-DD"|null, "fornitore": string|null, ' +
     '"righe": [{"descrizione": string, "id": string|null, "lotto": string|null, "scadenza": "YYYY-MM-DD"|null, "quantita": number|null, ' +
-    '"colli": number|null, "nato": string|null, "allevato": string|null, "macellato": string|null, "sezionato": string|null}]}\n' +
+    '"colli": number|null, "nato": string|null, "allevato": string|null, "macellato": string|null, "sezionato": string|null, ' +
+    '"tipoOrigine": string|null, "auricolare": string|null}]}\n' +
     "Regole: \"ddt\" è il numero del documento di trasporto o fattura, se presente. \"data\" è la data del documento. " +
     "\"fornitore\" è la ragione sociale dell'azienda che ha EMESSO il documento: quella riportata nell'intestazione/mittente del documento stesso, " +
     "di solito insieme a partita IVA, codice fiscale o indirizzo della sede, in alto nel documento o vicino alla firma/timbro. " +
@@ -91,7 +92,9 @@ exports.handler = async (event) => {
     "Scrivi i Paesi per esteso in italiano (Italia, Polonia, Germania, Francia, Irlanda, Paesi Bassi, Spagna, Stati Uniti, Brasile, Argentina, Uruguay...); " +
     "se il documento usa sigle (IT, PL, DE, FR, IE, NL, ES, US, BR, AR, UY) traducile nel nome del Paese. " +
     "Se la nota riporta la categoria dell'animale (es. scottona, vitellone, vacca) o il lotto/riferimento, usali per riconoscere a quale articolo appartiene la riga. " +
-    "Se il documento non riporta questi dati, lascia i quattro campi a null.";
+    "\"tipoOrigine\" è la colonna \"Tipo origine\" della nota (es. \"UE\" oppure \"Extra UE\"), \"auricolare\" è il codice identificativo dell'animale " +
+    "(colonna \"Auricolare\"/\"Marca auricolare\", es. \"PL005572173107\"); se una riga della nota raggruppa più animali, riporta i codici separati da virgola. " +
+    "Se il documento non riporta questi dati, lascia i campi a null.";
 
   const documentBlock = isPdf
     ? { type: "document", source: { type: "base64", media_type: "application/pdf", data: imageBase64 } }
