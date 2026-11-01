@@ -64,7 +64,8 @@ exports.handler = async (event) => {
     JSON.stringify(listaArticoli) + "\n" +
     "Rispondi SOLO con un oggetto JSON valido, senza testo prima o dopo, con questa forma esatta:\n" +
     '{"ddt": string|null, "data": "YYYY-MM-DD"|null, "fornitore": string|null, ' +
-    '"righe": [{"descrizione": string, "id": string|null, "lotto": string|null, "scadenza": "YYYY-MM-DD"|null, "quantita": number|null}]}\n' +
+    '"righe": [{"descrizione": string, "id": string|null, "lotto": string|null, "scadenza": "YYYY-MM-DD"|null, "quantita": number|null, ' +
+    '"colli": number|null, "nato": string|null, "allevato": string|null, "macellato": string|null, "sezionato": string|null}]}\n' +
     "Regole: \"ddt\" è il numero del documento di trasporto o fattura, se presente. \"data\" è la data del documento. " +
     "\"fornitore\" è la ragione sociale dell'azienda che ha EMESSO il documento: quella riportata nell'intestazione/mittente del documento stesso, " +
     "di solito insieme a partita IVA, codice fiscale o indirizzo della sede, in alto nel documento o vicino alla firma/timbro. " +
@@ -79,7 +80,18 @@ exports.handler = async (event) => {
     "Attenzione a non confondere il numero del documento con un lotto: se un codice è chiaramente etichettato come \"lotto\"/\"lot\" " +
     "(anche vicino all'intestazione o al nome del prodotto), quel codice va SOLO nel campo \"lotto\" della riga corrispondente, mai in \"ddt\". " +
     "Se non trovi un numero di documento chiaramente etichettato come tale (es. \"DDT n.\", \"Fattura n.\", \"Bolla n.\"), lascia \"ddt\" a null " +
-    "invece di usare un codice lotto o un altro riferimento ambiguo.";
+    "invece di usare un codice lotto o un altro riferimento ambiguo. " +
+    // Nicola, 01/11: "l'origine della carne se la può prendere quando scatto la foto?" — la
+    // nota di tracciabilità del bovino (Reg. CE 1760/2000) elenca per ogni riga Paese di
+    // nascita, allevamento, macellazione (con bollo CE) e sezionamento: vanno letti qui.
+    "\"colli\" è il numero di colli/pezzi della riga se indicato, altrimenti null. " +
+    "Se il documento è (o contiene) una NOTA INFORMATIVA / DATI DI TRACCIABILITÀ della carne, per ogni riga riporta anche: " +
+    "\"nato\" = Paese di nascita dell'animale, \"allevato\" = Paese di allevamento, \"macellato\" = Paese di macellazione seguito dal numero di bollo CE " +
+    "del macello se stampato (es. \"Polonia PL14200205WE\"), \"sezionato\" = Paese di sezionamento con il bollo CE del laboratorio se stampato. " +
+    "Scrivi i Paesi per esteso in italiano (Italia, Polonia, Germania, Francia, Irlanda, Paesi Bassi, Spagna, Stati Uniti, Brasile, Argentina, Uruguay...); " +
+    "se il documento usa sigle (IT, PL, DE, FR, IE, NL, ES, US, BR, AR, UY) traducile nel nome del Paese. " +
+    "Se la nota riporta la categoria dell'animale (es. scottona, vitellone, vacca) o il lotto/riferimento, usali per riconoscere a quale articolo appartiene la riga. " +
+    "Se il documento non riporta questi dati, lascia i quattro campi a null.";
 
   const documentBlock = isPdf
     ? { type: "document", source: { type: "base64", media_type: "application/pdf", data: imageBase64 } }
