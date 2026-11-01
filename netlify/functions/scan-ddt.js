@@ -57,10 +57,13 @@ exports.handler = async (event) => {
   const promptText =
     "Questa è la foto (o scansione) di un documento di trasporto (DDT), fattura o etichetta di un fornitore " +
     "alimentare ricevuta da un burger bar/factory. Estrai ogni riga di merce effettivamente ricevuta.\n" +
-    "Articoli già in anagrafica (usa l'id se una riga corrisponde chiaramente, altrimenti lascia null e riporta la descrizione così com'è). " +
-    "Un fornitore può scrivere lo stesso articolo con parole leggermente diverse da quelle in anagrafica (ordine delle parole, abbreviazioni, " +
-    "un dettaglio in più o in meno): usa buon senso e abbina comunque l'id quando si tratta chiaramente dello stesso prodotto, non solo in " +
-    "caso di corrispondenza esatta: " +
+    "Articoli già in anagrafica (ognuno con id, nome nostro e, quando c'è, il nome con cui lo chiama il fornitore). " +
+    "Per ogni riga del documento PROPONI SEMPRE l'id dell'articolo più somigliante: il fornitore usa quasi sempre parole diverse dalle nostre " +
+    "(es. \"Bovino Scottona ANT. 5/C. Fres.\" è il nostro \"Spallotto scottona\": la parola chiave in comune è \"scottona\"; " +
+    "\"Petto pollo fresco s/p\" è \"Petto di pollo\"). Guarda la parola che identifica l'animale/il taglio/l'ingrediente principale " +
+    "(scottona, bovino adulto, pollo, suino, bacon, cheddar, pane...) e scegli l'articolo che la contiene; se più articoli la contengono, " +
+    "scegli quello con più parole in comune. Lascia \"id\" a null SOLO se nessun articolo in anagrafica ha nulla in comune con la riga. " +
+    "Un dubbio tra due articoli simili NON è un motivo per lasciare null: proponi il più vicino, l'operatore conferma. Anagrafica: " +
     JSON.stringify(listaArticoli) + "\n" +
     "Rispondi SOLO con un oggetto JSON valido, senza testo prima o dopo, con questa forma esatta:\n" +
     '{"ddt": string|null, "data": "YYYY-MM-DD"|null, "fornitore": string|null, ' +
